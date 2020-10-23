@@ -17,6 +17,6 @@ We will use Azure's App Service platform for our web apps.
 ## Consequences
 
 * Using a PaaS will allow us to focus our effort on development over infrastructure.
-* We will be building on [past 18F experience with App Service](https://github.com/ctro/DevSecOpsMvp/tree/master/appservice)
+* We will be building on [past 18F experience with App Service](https://github.com/AlaskaDHSS/DevSecOpsMvp/tree/master/appservice)
 * We will be able to naturally expand into Web App for Containers if needed
 * This decision is consistent with [Azure's architecture decision tree](https://docs.microsoft.com/en-us/azure/architecture/guide/technology-choices/compute-decision-tree)
