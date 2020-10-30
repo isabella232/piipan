@@ -1,15 +1,29 @@
-#!/bin/sh
+#!/bin/bash
 
 RESOURCE_GROUP=piipan-resources
 LOCATION=westus
+
+# Identity object ID for the Azure environment owner
 OBJECT_ID=`az ad signed-in-user show --query objectId --output tsv`
+
+# Name of Key Vault
+VAULT_NAME=secret-keeper
+
+# Name of secret used to store the PostgreSQL server admin password
+PG_SECRET_NAME=particpants-records-admin
+
+# Create a very long, (mostly) random password. Ensures all Azure character
+# class requirements are met by tacking on a non-random, tailored suffix.
+random_password () {
+    head /dev/urandom | LC_ALL=C tr -dc "A-Za-z0-9" | head -c 64 ; echo -n 'aA1!'
+}
 
 echo "Creating $RESOURCE_GROUP group"
 az group create --name $RESOURCE_GROUP -l $LOCATION
 
 # Create a key vault which will store credentials for use in other templates
 az deployment group create \
-	--name secret-keeper \
+	--name $VAULT_NAME \
 	--resource-group $RESOURCE_GROUP \
 	--template-file ./arm-templates/key-vault.json \
 	--parameters \
@@ -27,3 +41,23 @@ while IFS=, read -r abbr name ; do
 		--parameters stateAbbreviation=$abbr
 done < states.csv
 
+# Avoid echoing passwords in a manner that may show up in process listing,
+# or storing it in a temp file that may be read, or appearing in a CI/CD log.
+#
+# By default, Azure CLI will print the password set in Key Vault; instead
+# just extract and print the secret id from the JSON response.
+export PG_SECRET=`random_password`
+printenv PG_SECRET | tr -d '\n' | az keyvault secret set \
+    --vault-name $VAULT_NAME \
+    --name $PG_SECRET_NAME \
+    --file /dev/stdin \
+    --query id
+
+echo "Creating PostgreSQL server"
+az deployment group create \
+	--name participant-records \
+	--resource-group $RESOURCE_GROUP \
+	--template-file ./arm-templates/participant-records.json \
+	--parameters \
+		secretName=$PG_SECRET_NAME \
+		vaultName=$VAULT_NAME
