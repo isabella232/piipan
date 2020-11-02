@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 RESOURCE_GROUP=piipan-resources
 LOCATION=westus
@@ -11,6 +12,12 @@ VAULT_NAME=secret-keeper
 
 # Name of secret used to store the PostgreSQL server admin password
 PG_SECRET_NAME=particpants-records-admin
+
+# Name of administrator login for PostgreSQL server
+PG_SUPERUSER=postgres
+
+# Name of PostgreSQL server
+PG_SERVER_NAME=participant-records
 
 # Create a very long, (mostly) random password. Ensures all Azure character
 # class requirements are met by tacking on a non-random, tailored suffix.
@@ -59,5 +66,17 @@ az deployment group create \
 	--resource-group $RESOURCE_GROUP \
 	--template-file ./arm-templates/participant-records.json \
 	--parameters \
+		administratorLogin=$PG_SUPERUSER \
+		serverName=$PG_SERVER_NAME \
 		secretName=$PG_SECRET_NAME \
 		vaultName=$VAULT_NAME
+
+export PGPASSWORD=$PG_SECRET
+export PGUSER=${PG_SUPERUSER}@${PG_SERVER_NAME}
+export PGHOST=`az resource show \
+	--resource-group $RESOURCE_GROUP \
+	--name $PG_SERVER_NAME \
+	--resource-type "Microsoft.DbForPostgreSQL/servers" \
+	--query properties.fullyQualifiedDomainName -o tsv`
+
+./create-databases.bash
