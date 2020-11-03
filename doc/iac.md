@@ -3,6 +3,7 @@
 ## Prerequisites
 - [Azure Command Line Interface (CLI)](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli)
 - `bash` shell, `/dev/urandom`, etc. via macOS, Linux, or the Windows Subsystem for Linux (WSL) 
+- `psql` client for PostgreSQL
 
 ## Steps
 To (re)create the Azure resources that `piipan` uses:
