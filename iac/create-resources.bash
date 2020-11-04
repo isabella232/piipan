@@ -3,6 +3,8 @@ set -e
 
 RESOURCE_GROUP=piipan-resources
 LOCATION=westus
+PROJECT_TAG=piipan
+RESOURCE_TAGS="{ \"Project\": \"${PROJECT_TAG}\" }"
 
 # Identity object ID for the Azure environment owner
 OBJECT_ID=`az ad signed-in-user show --query objectId --output tsv`
@@ -26,7 +28,7 @@ random_password () {
 }
 
 echo "Creating $RESOURCE_GROUP group"
-az group create --name $RESOURCE_GROUP -l $LOCATION
+az group create --name $RESOURCE_GROUP -l $LOCATION --tags Project=$PROJECT_TAG
 
 # Create a key vault which will store credentials for use in other templates
 az deployment group create \
@@ -35,7 +37,8 @@ az deployment group create \
   --template-file ./arm-templates/key-vault.json \
   --parameters \
     location=$LOCATION \
-    objectId=$OBJECT_ID
+    objectId=$OBJECT_ID \
+    resourceTags="$RESOURCE_TAGS"
 
 # For each participating state, create a separate storage account.
 # Each account has a blob storage container named `upload`.
@@ -45,7 +48,9 @@ while IFS=, read -r abbr name ; do
     --name "${abbr}-blob-storage" \
     --resource-group $RESOURCE_GROUP \
     --template-file ./arm-templates/blob-storage.json \
-    --parameters stateAbbreviation=$abbr
+    --parameters \
+      stateAbbreviation=$abbr \
+      resourceTags="$RESOURCE_TAGS"
 done < states.csv
 
 # Avoid echoing passwords in a manner that may show up in process listing,
@@ -69,7 +74,8 @@ az deployment group create \
     administratorLogin=$PG_SUPERUSER \
     serverName=$PG_SERVER_NAME \
     secretName=$PG_SECRET_NAME \
-    vaultName=$VAULT_NAME
+    vaultName=$VAULT_NAME \
+    resourceTags="$RESOURCE_TAGS"
 
 export PGPASSWORD=$PG_SECRET
 export PGUSER=${PG_SUPERUSER}@${PG_SERVER_NAME}
