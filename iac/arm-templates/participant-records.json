@@ -26,6 +26,9 @@
         },
         "serverName": {
             "type": "string"
+        },
+        "resourceTags": {
+            "type": "object"
         }
     },
     "variables": {
@@ -58,6 +61,9 @@
                         },
                         "serverName": {
                             "type": "string"
+                        },
+                        "resourceTags": {
+                            "type": "object",
                         }
                     },
                     "variables": {
@@ -79,6 +85,7 @@
                             "apiVersion": "2017-12-01-preview",
                             "kind": "",
                             "location": "[parameters('location')]",
+                            "tags": "[parameters('resourceTags')]",
                             "name": "[parameters('serverName')]",
                             "properties": {
                                 "version": "11",
@@ -128,6 +135,9 @@
                     },
                     "serverName": {
                         "value": "[parameters('serverName')]"
+                    },
+                    "resourceTags": {
+                        "value": "[parameters('resourceTags')]"
                     },
                     "administratorLogin": {
                         "value": "[parameters('administratorLogin')]"

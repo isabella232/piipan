@@ -7,6 +7,9 @@
         },
         "location": {
             "type": "string"
+        },
+        "resourceTags": {
+            "type": "object"
         }
     },
     "variables": {
@@ -17,6 +20,7 @@
             "apiVersion": "2018-02-14",
             "name": "[variables('name')]",
             "location": "[parameters('location')]",
+            "tags": "[parameters('resourceTags')]",
             "type": "Microsoft.KeyVault/vaults",
             "properties": {
                 "enabledForDeployment": false,
@@ -83,7 +87,6 @@
                     "virtualNetworkRules": []
                 }
             },
-            "tags": {},
             "dependsOn": []
         }
     ],
