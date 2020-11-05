@@ -96,11 +96,11 @@ export PGHOST=`az resource show \
 # Create App Service resources for dashboard app
 echo "Creating App Service resources for dashboard app"
 az deployment group create \
-	--name $DASHBOARD_APP_NAME \
-	--resource-group $RESOURCE_GROUP \
-	--template-file ./arm-templates/dashboard-app.json \
-	--parameters \
+  --name $DASHBOARD_APP_NAME \
+  --resource-group $RESOURCE_GROUP \
+  --template-file ./arm-templates/dashboard-app.json \
+  --parameters \
     location=$LOCATION \
     resourceTags="$RESOURCE_TAGS" \
     appName=$DASHBOARD_APP_NAME \
-		servicePlan=$APP_SERVICE_PLAN
+    servicePlan=$APP_SERVICE_PLAN
