@@ -1,13 +1,14 @@
 #!/bin/bash
 set -e
+set -u
 
 RESOURCE_GROUP=piipan-resources
 LOCATION=westus
 PROJECT_TAG=piipan
 RESOURCE_TAGS="{ \"Project\": \"${PROJECT_TAG}\" }"
 
-# Identity object ID for the Azure environment owner
-OBJECT_ID=`az ad signed-in-user show --query objectId --output tsv`
+# Identity object ID for the Azure environment account
+CURRENT_USER_OBJID=`az ad signed-in-user show --query objectId --output tsv`
 
 # Name of Key Vault
 VAULT_NAME=secret-keeper
@@ -17,6 +18,9 @@ PG_SECRET_NAME=particpants-records-admin
 
 # Name of administrator login for PostgreSQL server
 PG_SUPERUSER=postgres
+
+# Name of Azure Active Directory admin for PostgreSQL server
+PG_AAD_ADMIN=piipan-admins
 
 # Name of PostgreSQL server
 PG_SERVER_NAME=participant-records
@@ -43,7 +47,7 @@ az deployment group create \
   --template-file ./arm-templates/key-vault.json \
   --parameters \
     location=$LOCATION \
-    objectId=$OBJECT_ID \
+    objectId=$CURRENT_USER_OBJID \
     resourceTags="$RESOURCE_TAGS"
 
 # For each participating state, create a separate storage account.
@@ -83,6 +87,28 @@ az deployment group create \
     vaultName=$VAULT_NAME \
     resourceTags="$RESOURCE_TAGS"
 
+# The AD admin can't be specified in the PostgreSQL ARM template,
+# unlike in Azure SQL
+az ad group create --display-name $PG_AAD_ADMIN --mail-nickname $PG_AAD_ADMIN
+PG_AAD_ADMIN_OBJID=`az ad group show --group $PG_AAD_ADMIN --query objectId --output tsv`
+az postgres server ad-admin create \
+  --resource-group $RESOURCE_GROUP \
+  --server $PG_SERVER_NAME \
+  --display-name $PG_AAD_ADMIN \
+  --object-id $PG_AAD_ADMIN_OBJID
+
+# Create managed identities to admin each state's database
+while IFS=, read -r abbr name ; do
+    echo "Creating managed identity for $name ($abbr)"
+    abbr=`echo "$abbr" | tr '[:upper:]' '[:lower:]'`
+    identity=${abbr}admin
+    az identity create -g $RESOURCE_GROUP -n $identity
+done < states.csv
+
+# Temporarily add current user as a PostgreSQL AD admin to allow provisioning of
+# managed identity roles; assumes it is not already a member.
+az ad group member add --group $PG_AAD_ADMIN --member-id $CURRENT_USER_OBJID
+
 export PGPASSWORD=$PG_SECRET
 export PGUSER=${PG_SUPERUSER}@${PG_SERVER_NAME}
 export PGHOST=`az resource show \
@@ -91,7 +117,10 @@ export PGHOST=`az resource show \
   --resource-type "Microsoft.DbForPostgreSQL/servers" \
   --query properties.fullyQualifiedDomainName -o tsv`
 
-./create-databases.bash
+./create-databases.bash $RESOURCE_GROUP
+
+# Remove current user as a PostgreSQL AD admin
+az ad group member remove --group $PG_AAD_ADMIN --member-id $CURRENT_USER_OBJID
 
 # Create App Service resources for dashboard app
 echo "Creating App Service resources for dashboard app"
