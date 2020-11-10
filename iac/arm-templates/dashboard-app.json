@@ -17,7 +17,7 @@
     },
     "variables": {
         "appName": "[concat(parameters('appName'), '-', uniqueString(resourceGroup().id))]",
-        "sku": "B1"
+        "sku": "S1"
     },
     "resources": [
         {
@@ -46,7 +46,14 @@
             "properties": {
                 "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('servicePlan'))]",
                 "siteConfig": {
-                    "linuxFxVersion": "DOTNETCORE|3.1"
+                    "linuxFxVersion": "DOTNETCORE|3.1",
+                    "scmType": "LocalGit",
+                    "appSettings": [
+                        {
+                            "name": "PROJECT",
+                            "value": "dashboard/app/Dashboard.csproj"
+                        }
+                    ]
                 },
                 "resources": [
                     {
