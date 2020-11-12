@@ -41,7 +41,7 @@ Then, get the app-level deployment user:
     az webapp deployment list-publishing-credentials -n <app_name> -g piipan-resources --query publishingUserName --output tsv
 ```
 
-With that information, set the remote URL on the repo. Since app-level usernames being with a dollar sign, use single quotes or a backslash to escape: 
+With that information, set the remote URL on the repo. Since app-level usernames begin with a dollar sign, use single quotes or a backslash to escape: 
 ```
     git remote add azure 'https://<user>@<app_name>.scm.azurewebsites.net/<app_name>.git'
 ```
