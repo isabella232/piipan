@@ -53,6 +53,14 @@
                             "name": "PROJECT",
                             "value": "dashboard/app/Dashboard.csproj"
                         }
+                    ],
+                    "ipSecurityRestrictions": [
+                        {
+                            "ipAddress": "159.142.0.0/16",
+                            "action": "Allow",
+                            "name": "GSA IP range",
+                            "priority": 100
+                        }
                     ]
                 },
                 "resources": [
