@@ -1,13 +1,24 @@
 version: 2.1
 
 orbs:
-win: circleci/windows@2.2.0
+  azure-cli: circleci/azure-cli@1.1.0
 
 jobs:
   build:
-    executor: win/default     
-    
+    docker:
+      - image: mcr.microsoft.com/dotnet/sdk:3.1
     steps:
       - checkout
-          path: dashboard/app
-      - run: dotnet build
+      - run:
+          name: Install zip
+          command: |
+            apt-get update -y
+            apt-get install -y zip
+      - run:
+          working_directory: dashboard/app
+          name: Build .NET project
+          command: dotnet publish -o ./build
+      - run:
+          working_directory: dashboard/app/build
+          name: Zip project build
+          command: zip -r build.zip .
