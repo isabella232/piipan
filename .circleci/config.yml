@@ -51,7 +51,7 @@ jobs:
       - azure-cli/login-with-service-principal
       - run:
           name: Upload app
-          command: az webapp deployment source config-zip -g piipan-resources -n piipan-dashboard-xddlt27hoq7hy --slot staging 
+          command: az webapp deployment source config-zip -g piipan-resources -n piipan-dashboard-xddlt27hoq7hy --slot staging --src /build/workspace/build.zip
 
   deploy-dev:
     executor: azure-cli/azure-docker
@@ -61,7 +61,7 @@ jobs:
       - azure-cli/login-with-service-principal
       - run:
           name: Upload app
-          command: az webapp deployment source config-zip -g piipan-resources -n piipan-dashboard-xddlt27hoq7hy --slot develop 
+          command: az webapp deployment source config-zip -g piipan-resources -n piipan-dashboard-xddlt27hoq7hy --slot develop --src /build/workspace/build.zip
 
 workflows:
   version: 2
