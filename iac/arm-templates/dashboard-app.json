@@ -54,7 +54,8 @@
                             "name": "GSA IP range",
                             "priority": 100
                         }
-                    ]
+                    ],
+                    "ftpsState": "Disabled"
                 },
                 "resources": [
                     {
@@ -89,7 +90,8 @@
                             "name": "GSA IP range",
                             "priority": 100
                         }
-                    ]
+                    ],
+                    "ftpsState": "Disabled"
                 }
             }
         },
@@ -114,7 +116,8 @@
                             "name": "GSA IP range",
                             "priority": 100
                         }
-                    ]
+                    ],
+                    "ftpsState": "Disabled"
                 }
             }
         }
