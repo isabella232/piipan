@@ -22,3 +22,21 @@ jobs:
           working_directory: dashboard/app/build
           name: Zip project build
           command: zip -r build.zip .
+  deploy:
+    executor: azure-cli/azure-docker
+    steps:
+      - checkout
+      - azure-cli/login-with-service-principal
+      - run:
+          name: Upload app
+          working_directory: dashboard/app
+          command: az webapp deployment source config-zip -g $AZURE_RESOURCE_GROUP -n $APP_NAME --src ./build.zip
+
+workflows:
+  version: 2
+  build-and-deploy:
+    jobs:
+      - build
+      - deploy:
+          requires:
+            - build
