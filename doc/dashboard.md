@@ -25,7 +25,7 @@ Alternatively, use the `watch` command to update the app upon file changes:
 
 ## Deployment
 
-The app is deployed from [CircleCI](https://app.circleci.com/pipelines/github/18F/piipan). The [configuration](../.circleci/config.yml) is set to deploy to different environments depending on the branch that triggers the Circle CI job. The basic deploy process is:
+The app is deployed from [CircleCI](https://app.circleci.com/pipelines/github/18F/piipan). The [configuration](../.circleci/config.yml) is set to deploy to different environments within Azure depending on the branch that triggers the CircleCI job. The basic deploy process is:
 
 1. Build the app
 2. Package app as a zip
@@ -38,18 +38,21 @@ The app is configured with three deployment slots when created from the IaC:
 - staging (`https://<app_name>-staging.azurewebsites.net/`)
 - develop (`https://<app_name>-develop.azurewebsites.net/`)
 
-The Circle CI configuration associates the following branches with each deployment slot:
-- `main` --> production
-- `staging` --> staging
-- `develop` --> develop
+The CircleCI configuration associates the following branches with each deployment slot:
 
-Any push to one of those branches will be automatically deployed to the associated deployment slot upon a successful build.
+| branch | deployment slot |
+|---|---|
+| `main` | production |
+| `staging` | staging |
+| `develop` | develop |
+
+A push to any of these branches will be automatically deployed to the associated deployment slot upon a successful build.
 
 ### Deployment approach
 
-The app is deployed using the [ZIP deployment method](https://docs.microsoft.com/en-us/azure/app-service/deploy-zip). The app is first built using `dotnet publish -o <build_directory>` and the output of that command is zipped using `cd <build_directory> && zip -r <build_name>.zip .`. Note: the zip file contains the *contents* of the output directory but not the directory itself.
+The app is deployed from CircleCI using the [ZIP deployment method](https://docs.microsoft.com/en-us/azure/app-service/deploy-zip). The app is first built using `dotnet publish -o <build_directory>` and the output is zipped using `cd <build_directory> && zip -r <build_name>.zip .`. Note: the zip file contains the *contents* of the output directory but not the directory itself.
 
-The zip file is then pushed to Azure using the Azure CLI:
+The zip file is then pushed to Azure:
 
 ```
     az webapp deployment source config-zip -g <resource_group> -n <app_name> --slot <deployment_slot_name> --src <path_to_build>.zip
@@ -57,4 +60,4 @@ The zip file is then pushed to Azure using the Azure CLI:
 
 ### Deployment credentials
 
-Circle CI is configured to use a service principal account to login in to Azure and run the deployment command. Credentials for the service principal are stored in Circle CI as environment variables. The service principal is scoped to the dashboard app and can not access other resources.
+In order for CircleCI to log in to Azure and run CLI commands we have to supply it with credentials. The credentials are associated with a service principal account that is [created and stored in Azure](https://docs.microsoft.com/en-us/cli/azure/create-an-azure-service-principal-azure-cli#password-based-authentication). Each service principal is issued a client ID, client secret, and tenant ID. Those values are stored as environment variables in Circle CI and accessed by the [circleci/azure-cli orb](https://circleci.com/developer/orbs/orb/circleci/azure-cli) which handles the log in process.
