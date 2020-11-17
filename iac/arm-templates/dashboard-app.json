@@ -47,13 +47,6 @@
                 "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('servicePlan'))]",
                 "siteConfig": {
                     "linuxFxVersion": "DOTNETCORE|3.1",
-                    "scmType": "LocalGit",
-                    "appSettings": [
-                        {
-                            "name": "PROJECT",
-                            "value": "dashboard/app/Dashboard.csproj"
-                        }
-                    ],
                     "ipSecurityRestrictions": [
                         {
                             "ipAddress": "159.142.0.0/16",
@@ -73,6 +66,56 @@
                         ]
                     }
                 ]
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/slots",
+            "apiVersion": "2018-11-01",
+            "name": "[concat(variables('appName'), '/develop')]",
+            "location": "[parameters('location')]",
+            "tags": "[parameters('resourceTags')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', variables('appName'))]"
+            ],
+            "properties": {
+                "enabled": true,
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('servicePlan'))]",
+                "siteConfig": {
+                    "linuxFxVersion": "DOTNETCORE|3.1",
+                    "ipSecurityRestrictions": [
+                        {
+                            "ipAddress": "159.142.0.0/16",
+                            "action": "Allow",
+                            "name": "GSA IP range",
+                            "priority": 100
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/slots",
+            "apiVersion": "2018-11-01",
+            "name": "[concat(variables('appName'), '/staging')]",
+            "location": "[parameters('location')]",
+            "tags": "[parameters('resourceTags')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', variables('appName'))]"
+            ],
+            "properties": {
+                "enabled": true,
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('servicePlan'))]",
+                "siteConfig": {
+                    "linuxFxVersion": "DOTNETCORE|3.1",
+                    "ipSecurityRestrictions": [
+                        {
+                            "ipAddress": "159.142.0.0/16",
+                            "action": "Allow",
+                            "name": "GSA IP range",
+                            "priority": 100
+                        }
+                    ]
+                }
             }
         }
     ]
