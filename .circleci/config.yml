@@ -1,0 +1,88 @@
+version: 2.1
+
+orbs:
+  azure-cli: circleci/azure-cli@1.1.0
+
+jobs:
+  build:
+    docker:
+      - image: mcr.microsoft.com/dotnet/sdk:3.1
+    working_directory: /build
+    steps:
+      - checkout
+      - run:
+          name: Install zip
+          command: |
+            apt-get update -y
+            apt-get install -y zip
+      - run:
+          working_directory: dashboard/app
+          name: Build .NET project
+          command: dotnet publish -o ./build
+      - run:
+          working_directory: dashboard/app/build
+          name: Zip project build
+          command: zip -r build.zip .
+      - run:
+          name: Move zip to persistent directory
+          command: |
+            mkdir -p workspace
+            mv dashboard/app/build/build.zip workspace/build.zip
+      - persist_to_workspace:
+          root: workspace
+          paths:
+            - build.zip
+
+  deploy-prod:
+    executor: azure-cli/azure-docker
+    steps:
+      - attach_workspace:
+          at: /build/workspace
+      - azure-cli/login-with-service-principal
+      - run:
+          name: Upload app
+          command: az webapp deployment source config-zip -g $AZURE_RESOURCE_GROUP -n $APP_NAME --src /build/workspace/build.zip
+
+  deploy-staging:
+    executor: azure-cli/azure-docker
+    steps:
+      - attach_workspace:
+          at: /build/workspace
+      - azure-cli/login-with-service-principal
+      - run:
+          name: Upload app
+          command: az webapp deployment source config-zip -g piipan-resources -n piipan-dashboard-xddlt27hoq7hy --slot staging --src /build/workspace/build.zip
+
+  deploy-dev:
+    executor: azure-cli/azure-docker
+    steps:
+      - attach_workspace:
+          at: /build/workspace
+      - azure-cli/login-with-service-principal
+      - run:
+          name: Upload app
+          command: az webapp deployment source config-zip -g piipan-resources -n piipan-dashboard-xddlt27hoq7hy --slot develop --src /build/workspace/build.zip
+
+workflows:
+  version: 2
+  build-and-deploy:
+    jobs:
+      - build
+      - deploy-dev:
+          requires:
+            - build
+          filters:
+            branches:
+              only: develop
+      - deploy-staging:
+          requires:
+            - build
+          filters:
+            branches:
+              only: staging
+      - deploy-prod:
+          requires:
+            - build
+          filters:
+            branches:
+              only: main
