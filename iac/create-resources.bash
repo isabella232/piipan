@@ -31,6 +31,45 @@ APP_SERVICE_PLAN=piipan-app-plan
 # Base name of dashboard app
 DASHBOARD_APP_NAME=piipan-dashboard
 
+# Display name of service principal account responsible for CI/CD tasks
+SP_NAME_CICD=piipan-cicd
+
+# Create a service principal with the provided name and store its client_id
+# and client_secret values in the key vault.
+#
+# Only create the SP if one with the provided name does not already exist.
+# Running the create command on an existing service principal will "patch"
+# the account and reset the password.
+create_and_store_sp () {
+  name=$1
+  if [ -z `az ad sp list --display-name $name --query "[].appId" --output tsv` ]
+    then
+      # Service principal does not exist. Create and store secret in vault.
+      scope=`az group show -n $RESOURCE_GROUP --query id --output tsv`
+      secret=`az ad sp create-for-rbac \
+        --name $name \
+        --scope $scope \
+        --query password \
+        --output tsv`
+      id=`az ad sp show --id http://$name --query appId --output tsv`
+
+      az keyvault secret set \
+        --vault-name $VAULT_NAME \
+        --name $id \
+        --value $secret \
+        --output none
+
+      az keyvault secret set-attributes \
+        --vault-name $VAULT_NAME \
+        --name $id \
+        --content-type "$name service principal credentials"
+
+      echo "Service principal $name created."
+    else
+      echo "Service principal $name already exists."
+  fi
+}
+
 # Create a very long, (mostly) random password. Ensures all Azure character
 # class requirements are met by tacking on a non-random, tailored suffix.
 random_password () {
@@ -133,3 +172,6 @@ az deployment group create \
     resourceTags="$RESOURCE_TAGS" \
     appName=$DASHBOARD_APP_NAME \
     servicePlan=$APP_SERVICE_PLAN
+
+# Create a service principal for use by CircleCI.
+create_and_store_sp $SP_NAME_CICD
