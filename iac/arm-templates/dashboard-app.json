@@ -17,7 +17,19 @@
     },
     "variables": {
         "appName": "[concat(parameters('appName'), '-', uniqueString(resourceGroup().id))]",
-        "sku": "S1"
+        "sku": "S1",
+        "baseSiteConfig": {
+            "linuxFxVersion": "DOTNETCORE|3.1",
+            "ipSecurityRestrictions": [
+                {
+                    "ipAddress": "159.142.0.0/16",
+                    "action": "Allow",
+                    "name": "GSA IP range",
+                    "priority": 100
+                }
+            ],
+            "ftpsState": "Disabled"
+        }
     },
     "resources": [
         {
@@ -45,18 +57,7 @@
             ],
             "properties": {
                 "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('servicePlan'))]",
-                "siteConfig": {
-                    "linuxFxVersion": "DOTNETCORE|3.1",
-                    "ipSecurityRestrictions": [
-                        {
-                            "ipAddress": "159.142.0.0/16",
-                            "action": "Allow",
-                            "name": "GSA IP range",
-                            "priority": 100
-                        }
-                    ],
-                    "ftpsState": "Disabled"
-                },
+                "siteConfig": "[variables('baseSiteConfig')]",
                 "resources": [
                     {
                         "apiVersion": "2020-06-01",
@@ -81,18 +82,7 @@
             "properties": {
                 "enabled": true,
                 "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('servicePlan'))]",
-                "siteConfig": {
-                    "linuxFxVersion": "DOTNETCORE|3.1",
-                    "ipSecurityRestrictions": [
-                        {
-                            "ipAddress": "159.142.0.0/16",
-                            "action": "Allow",
-                            "name": "GSA IP range",
-                            "priority": 100
-                        }
-                    ],
-                    "ftpsState": "Disabled"
-                }
+                "siteConfig": "[variables('baseSiteConfig')]"
             }
         },
         {
@@ -107,18 +97,7 @@
             "properties": {
                 "enabled": true,
                 "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('servicePlan'))]",
-                "siteConfig": {
-                    "linuxFxVersion": "DOTNETCORE|3.1",
-                    "ipSecurityRestrictions": [
-                        {
-                            "ipAddress": "159.142.0.0/16",
-                            "action": "Allow",
-                            "name": "GSA IP range",
-                            "priority": 100
-                        }
-                    ],
-                    "ftpsState": "Disabled"
-                }
+                "siteConfig": "[variables('baseSiteConfig')]"
             }
         }
     ]
