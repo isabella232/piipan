@@ -33,6 +33,8 @@ The app is deployed from [CircleCI](https://app.circleci.com/pipelines/github/18
 
 ### Azure deployment slots
 
+***Note:** the following deployment approach describes `staging` and `develop` branches and deployment slots that are currently only mocked in for the purpose of configuring CircleCI and App Service. Our git workflow excludes those branches for now and only uses the `main` branch and `production` deployment slot.*
+
 The app is configured with three deployment slots when created from the IaC:
 - production, the default slot created by App Service (`https://<app_name>.azurewebsites.net/`)
 - staging (`https://<app_name>-staging.azurewebsites.net/`)
@@ -57,7 +59,3 @@ The zip file is then pushed to Azure:
 ```
     az webapp deployment source config-zip -g <resource_group> -n <app_name> --slot <deployment_slot_name> --src <path_to_build>.zip
 ```
-
-### Deployment credentials
-
-In order for CircleCI to log in to Azure and run CLI commands we have to supply it with credentials. The credentials are associated with a service principal account that is [created and stored in Azure](https://docs.microsoft.com/en-us/cli/azure/create-an-azure-service-principal-azure-cli#password-based-authentication). Each service principal is issued a client ID, client secret, and tenant ID. Those values are stored as environment variables in Circle CI and accessed by the [circleci/azure-cli orb](https://circleci.com/developer/orbs/orb/circleci/azure-cli) which handles the log in process.
